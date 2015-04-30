@@ -64,8 +64,10 @@ int main(int argc, char **argv)
 	//initialized my stack and faults
 	initialize(lrus, MAX_FRAMES);
 	
+	//array of faults
 	unsigned long faults[MAX_FRAMES+1];
 
+	//initialize everything to zero as per PIAZZA
 	int frame=0;
 	for(frame=0; frame<MAX_FRAMES; frame++){
 	  faults[frame] = 0;
@@ -94,10 +96,12 @@ int main(int argc, char **argv)
 		int depth = seek_and_remove(lrus, page_num);
 		if(depth == -1){
 		  push(lrus, page_num);
+		  //increments all frames as per the doc
 		  for(frame = 1; frame <= MAX_FRAMES; frame++){
 		    faults[frame]++;
 		  }
 		}else{
+		  //increments everything up to depth as per doc
 		  for(frame = 1; frame < depth; frame++){
 		    faults[frame]++;
 		  }
@@ -105,8 +109,9 @@ int main(int argc, char **argv)
 	}//while(!feof...
 
 	//TODO: find the number of page faults for each number of allocated frames
-	printf("TOTAL:,%lu\n",num_accesses);
+	printf("TOTAL: %lu\n",num_accesses);
 	printf("frames, misses, miss rate \n");
+	//trae explained to me how to get the thing layed out with the percentage
 	for(frame = 1; frame <= MAX_FRAMES; frame++){
 	  printf("%d,%lu,%f\n",frame,faults[frame],(double)faults[frame]/num_accesses);
 	}
