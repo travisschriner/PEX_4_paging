@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 
 	//initialize everything to zero as per PIAZZA
 	int frame=0;
-	for(frame=0; frame<MAX_FRAMES; frame++){
+	for(frame=0; frame<=MAX_FRAMES; frame++){
 	  faults[frame] = 0;
 	}
 
@@ -83,9 +83,9 @@ int main(int argc, char **argv)
 
 		// this next line prints the page number that was referenced.
 		// Note the use of %lu as it is an unsigned long!  Might be useful when debugging.
-		printf("%lu\n",page_num);
+		//	printf("%lu\n",page_num);
 		debug = 0;
-		if(num_accesses >= 450787){
+		if(0){
 		  printf("Triggered!");
 		  debug =1;
 		}else{
@@ -95,9 +95,9 @@ int main(int argc, char **argv)
 		num_accesses++;
 
 		// more code possibly useful for debugging... gives an indication of progress being made
-		//if((num_accesses % 100000) == 0){
-		//	fprintf(stderr,"%lu samples read\r", num_accesses);
-		//}
+		if((num_accesses % 100000) == 0){
+			fprintf(stderr,"%lu samples read\r", num_accesses);
+		}
 
 		//TODO: process each page reference
 		int depth = seek_and_remove(lrus, page_num);
@@ -155,10 +155,17 @@ void push(lrustack* lrus, unsigned long pagenum){
 if(debug){
     printf("new node malloced\n");
   }
-
-  new->pagenum = pagenum;
+ if(lrus->head == NULL){
+ new->pagenum = pagenum;
   new->next = lrus->head;
   new->prev = NULL;
+  lrus->tail = new;
+    }else{
+   new->pagenum = pagenum;
+   new->next = lrus->head;
+   new->prev = NULL;
+ }
+ 
 
 if(debug){
     printf("new node on top of stack\n");
@@ -251,7 +258,16 @@ if(debug){
 	}	
 	return depth;
       }else{
+
+if(debug){
+    printf("pagenum not found\n");
+  }
+	if(scanner != NULL){
 	scanner = scanner->next;
+	}
+if(debug){
+    printf("updated scanner to scanner->next\n");
+  }
 	depth++;
       }
     }//while
