@@ -10,7 +10,7 @@
 int main(int argc, char **argv)
 {
 
-        lrustack lrus;
+        lrustack* lrus = malloc(sizeof(lrustack*));
 	FILE *ifp;
 	unsigned long num_accesses=0;
 	p2AddrTr trace_record;
@@ -61,8 +61,15 @@ int main(int argc, char **argv)
 			break;
 	}
 	
-	//initialized my stack
-	initialize(&lrus, MAX_FRAMES);
+	//initialized my stack and faults
+	initialize(lrus, MAX_FRAMES);
+	
+	unsigned long faults[MAX_FRAMES+1];
+
+	int frame=0;
+	for(frame=0; frame<MAX_FRAMES; frame++){
+	  faults[frame] = 0;
+	}
 
 	while(!feof(ifp))
 	//while(!feof(ifp) && i < 100)  //you may want to use this to debug
@@ -74,25 +81,35 @@ int main(int argc, char **argv)
 
 		// this next line prints the page number that was referenced.
 		// Note the use of %lu as it is an unsigned long!  Might be useful when debugging.
-		 printf("%lu\n",page_num);
+		//printf("%lu\n",page_num);
 
 		num_accesses++;
 
 		// more code possibly useful for debugging... gives an indication of progress being made
-		if((num_accesses % 100000) == 0){
-			fprintf(stderr,"%lu samples read\r", num_accesses);
-		}
+		//if((num_accesses % 100000) == 0){
+		//	fprintf(stderr,"%lu samples read\r", num_accesses);
+		//}
 
 		//TODO: process each page reference
-		int depth = seek_and_remove(&lrus, page_num);
+		int depth = seek_and_remove(lrus, page_num);
 		if(depth == -1){
-		  push(&lrus, page_num);
+		  push(lrus, page_num);
+		  for(frame = 1; frame <= MAX_FRAMES; frame++){
+		    faults[frame]++;
+		  }
+		}else{
+		  for(frame = 1; frame < depth; frame++){
+		    faults[frame]++;
+		  }
 		}
-		
-
-	}
+	}//while(!feof...
 
 	//TODO: find the number of page faults for each number of allocated frames
+	printf("TOTAL:,%lu\n",num_accesses);
+	printf("frames, misses, miss rate \n");
+	for(frame = 1; frame <= MAX_FRAMES; frame++){
+	  printf("%d,%lu,%f\n",frame,faults[frame],(double)faults[frame]/num_accesses);
+	}
 
 	fclose(ifp);
 
@@ -104,8 +121,6 @@ int main(int argc, char **argv)
 
 /*initialize the LRU stack */
 void initialize(lrustack* lrus, unsigned int maxsize){
-  printf("\n I entered Initialize \n");
-
   lrus->head = NULL;
   lrus->tail = NULL;
   lrus->size = 0;
@@ -119,7 +134,6 @@ void initialize(lrustack* lrus, unsigned int maxsize){
    the LRU stack; make sure to keep track of the LRU stack's size
    and free and reset the tail as necessary to limit it to max size */
 void push(lrustack* lrus, unsigned long pagenum){
-  printf("I entered push\n");
 
   //initializes a new node, inserts data, and places at the top of the stack
   node* new = malloc(sizeof(node*));
@@ -163,48 +177,37 @@ void push(lrustack* lrus, unsigned long pagenum){
    at which pagenum was found or -1 if not. Will place removed 
    at top of stack if found*/
 int seek_and_remove(lrustack* lrus, unsigned long pagenum){
-
   int depth = 1;
   node* scanner = lrus->head;
-  
-  
-  if(scanner == NULL){ //nothing in stack
-    
-    return -1;
-  }else{
-    while((depth <= lrus->maxsize) && (scanner != NULL)){
-      
+    while(scanner != NULL){
 
-      //found the pagenum in the list
       if(scanner->pagenum == pagenum){
-	
 	node* above = scanner->prev;
 	node* below = scanner->next;
-
-	//middle of stack is pulled 
+	//middle  
 	if(above != NULL && below != NULL){
 	  above->next = below;
 	  below->prev = above;
 	  scanner->next = lrus->head;
 	  scanner->prev = NULL;
+	  lrus->head->prev = scanner;
 	  lrus->head = scanner;
 	}else if(above == NULL){ //pulling head & single node case
 	  return 1; 
 	}else if(below == NULL){//pulling tail (can only reach if a node is above this)
-	  above->next = below;
+	  above->next = below; //NULL
 	  scanner->next = lrus->head;
 	  scanner->prev = NULL;
+	  lrus->head->prev = scanner;
 	  lrus->head = scanner;	  
 	}else{
 	  printf("\nThis isn't where I parked my car...\n");
-	}
-	
+	}	
 	return depth;
       }else{
 	scanner = scanner->next;
 	depth++;
       }
     }//while
-  }//else
-  return -1; //will hit if stack overflow 
+  return -1; //will hit if stack overflow or stack empty
 }
