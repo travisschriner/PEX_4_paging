@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 		  }
 		}else{
 		  //increments everything up to depth as per doc
-		  for(frame = 1; frame < depth; frame++){
+		  for(frame = 1; frame <= depth; frame++){
 		    faults[frame]++;
 		  }
 		}
@@ -150,7 +150,7 @@ void push(lrustack* lrus, unsigned long pagenum){
   /*put first so if the new node brings the stack to its maxsize,
     it does not delete the last one even though it should still
     be there*/
-  if(lrus->size == lrus->maxsize){
+  if(lrus->size >= lrus->maxsize){
     node* runFree = lrus->tail;
     lrus->tail = lrus->tail->prev; //tail->prev should exist if maxsize is 2 or greater
     lrus->tail->next = NULL;
@@ -204,7 +204,8 @@ int seek_and_remove(lrustack* lrus, unsigned long pagenum){
 	  scanner->next = lrus->head;
 	  scanner->prev = NULL;
 	  lrus->head->prev = scanner;
-	  lrus->head = scanner;	  
+	  lrus->head = scanner;	 
+	  lrus->tail = above;
 	}else{
 	  printf("\nThis isn't where I parked my car...\n");
 	}	
