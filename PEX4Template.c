@@ -85,7 +85,8 @@ int main(int argc, char **argv)
 		// Note the use of %lu as it is an unsigned long!  Might be useful when debugging.
 		printf("%lu\n",page_num);
 		debug = 0;
-		if(page_num == 270073){
+		if(num_accesses >= 450787){
+		  printf("Triggered!");
 		  debug =1;
 		}else{
 		  debug = 0;
