@@ -5,7 +5,7 @@
 
 
 
-
+int debug;
 
 int main(int argc, char **argv)
 {
@@ -83,7 +83,13 @@ int main(int argc, char **argv)
 
 		// this next line prints the page number that was referenced.
 		// Note the use of %lu as it is an unsigned long!  Might be useful when debugging.
-		//printf("%lu\n",page_num);
+		printf("%lu\n",page_num);
+		debug = 0;
+		if(page_num == 270073){
+		  debug =1;
+		}else{
+		  debug = 0;
+		}
 
 		num_accesses++;
 
@@ -139,22 +145,39 @@ void initialize(lrustack* lrus, unsigned int maxsize){
    the LRU stack; make sure to keep track of the LRU stack's size
    and free and reset the tail as necessary to limit it to max size */
 void push(lrustack* lrus, unsigned long pagenum){
-
+  if(debug){
+    printf("entered psuh\n");
+  }
   //initializes a new node, inserts data, and places at the top of the stack
   node* new = malloc(sizeof(node*));
+
+if(debug){
+    printf("new node malloced\n");
+  }
+
   new->pagenum = pagenum;
   new->next = lrus->head;
   new->prev = NULL;
+
+if(debug){
+    printf("new node on top of stack\n");
+  }
 
   //gets rid of the last node on the stack if stack is too tall
   /*put first so if the new node brings the stack to its maxsize,
     it does not delete the last one even though it should still
     be there*/
   if(lrus->size >= lrus->maxsize){
+if(debug){
+    printf("entered maxsize case\n");
+  }
     node* runFree = lrus->tail;
     lrus->tail = lrus->tail->prev; //tail->prev should exist if maxsize is 2 or greater
     lrus->tail->next = NULL;
     free(runFree);
+if(debug){
+    printf("fixed and freed tail\n");
+  }
   }
 
   //if lrus->head == NULL, new->next is already NULL
@@ -163,6 +186,9 @@ void push(lrustack* lrus, unsigned long pagenum){
   }
   //new head 
   lrus->head = new;
+if(debug){
+    printf("updated lrus->head\n");
+  }
 
   /*if size = maxsize, no need to increment since we know
     the tail was already removed. If it is less, than we need
@@ -173,6 +199,9 @@ void push(lrustack* lrus, unsigned long pagenum){
     where the stack could never fill up.*/
   if(lrus->size < lrus->maxsize){
     lrus->size++;
+if(debug){
+    printf("updated lru size\n");
+  }
   }  
 }
 
@@ -182,11 +211,21 @@ void push(lrustack* lrus, unsigned long pagenum){
    at which pagenum was found or -1 if not. Will place removed 
    at top of stack if found*/
 int seek_and_remove(lrustack* lrus, unsigned long pagenum){
+
+if(debug){
+    printf("entered see_and_remove\n");
+  }
   int depth = 1;
   node* scanner = lrus->head;
     while(scanner != NULL){
+if(debug){
+    printf("entered while loop\n");
+  }
 
       if(scanner->pagenum == pagenum){
+if(debug){
+    printf("pagenum found\n");
+  }
 	node* above = scanner->prev;
 	node* below = scanner->next;
 	//middle  
